@@ -1,4 +1,4 @@
-# 1. git
+# 1. git/github dev test
 로컬 저장소
 
 <br>
