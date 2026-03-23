@@ -121,4 +121,121 @@ git pull 깃허브레포지터리주소.git
 git branch -M 브랜치명
 git pull origin 브랜치명
 ```
-123
+
+<br><br>
+
+# 3. Pull Request (PR)
+
+> GitHub에서 특정 브랜치의 변경 사항을 다른 브랜치에 병합(merge)해 달라고 요청하는 기능  
+> 팀 리더(main 관리자)가 코드를 검토하고, 승인·수정 요청·의견을 남기는 **협업 및 품질 관리 창구**로 활용된다.
+
+<br>
+
+## 3.1 기본 개념: 브랜치 구조
+
+```
+main
+├── frontend
+└── backend
+```
+
+- `main` → `frontend` / `backend` 방향으로 PR을 보낸다.
+- 작업자는 `dev` (또는 `frontend`, `backend`) 브랜치에서 작업 후 PR을 생성한다.
+
+<br>
+
+## 3.2 작업자(dev 브랜치) — PR 생성 절차
+
+### ① 현재 브랜치 확인 및 전환
+```bash
+# 현재 브랜치가 dev가 아닌 경우, dev로 전환
+git branch -M dev
+```
+
+> ⚠️ 작업한 내용이 `main`과 동일한 경우 비교 대상이 없으므로,  
+> 아래 순서대로 push 후 GitHub에서 PR을 생성한다.
+
+### ② 변경 사항 커밋 & 푸시
+```bash
+git add .
+git commit -m "커밋 메시지"
+git push -u origin dev
+```
+
+### ③ GitHub에서 PR 생성
+1. 저장소 페이지에서 **branch 링크** 클릭
+2. 브랜치 목록에서 `dev` 브랜치의 오른쪽 확장 메뉴 **[...]** 클릭
+3. **[New pull request]** 선택
+4. PR 제목과 설명 메시지 입력
+5. **[Create pull request]** 클릭
+
+> `base` 브랜치: `main` (병합될 대상)  
+> `compare` 브랜치: `dev` (내가 작업한 브랜치)
+
+<br>
+
+## 3.3 팀 리더(main 관리자) — 코드 리뷰 및 결정
+
+PR을 받은 팀 리더는 **Files changed** 탭에서 변경 사항을 확인하고, 아래 세 가지 중 하나로 결론을 내린다.
+
+| 결정 | 의미 | 후속 조치 |
+|------|------|-----------|
+| **Approve** (승인) | 코드에 문제 없음 | 바로 merge 가능 |
+| **Request Changes** (수정 요청) | 반드시 수정이 필요함 | 수정 후 다시 리뷰 필요 |
+| **Comment** (참고 의견) | 선택적으로 반영 가능한 의견 | 작업자가 판단하여 반영 |
+
+<br>
+
+## 3.4 작업자 — 수정 요청(Request Changes) 대응 절차
+
+```bash
+# 1. 코드 수정 후 동일 브랜치에서 커밋 & 푸시
+git add .
+git commit -m "리뷰 반영: 수정 내용 설명"
+git push -u origin dev
+# → 기존 PR에 자동으로 커밋이 추가되며, 리뷰어에게 알림이 간다.
+```
+
+<br>
+
+## 3.5 dev 브랜치 — main 변경 사항 동기화 (pull 먼저!)
+
+> 코드가 맞지 않거나 충돌(conflict)이 예상되는 경우,  
+> **작업 전 반드시 main을 pull한 후 작업**하도록 요청한다.
+
+```bash
+# main의 최신 내용을 dev로 가져오기
+git branch -M main
+git pull 레포지터리주소
+
+# 변경 사항 비교
+git diff                  # 코드 내용 비교
+ls -al                    # 파일 목록 비교
+# (VS Code에서 파일 내용 비교 가능)
+
+# 필요한 작업 완료 후 다시 dev로 전환하여 push
+git branch -M dev
+git add .
+git commit -m "커밋 메시지"
+git push -u origin dev
+```
+
+<br>
+
+## 3.6 전체 코드 리뷰 흐름 요약
+
+```
+작업자 (dev 브랜치)
+  │
+  ├─ git add . / commit / push
+  │
+  ▼
+GitHub — PR 생성 (dev → main)
+  │
+  ▼
+리뷰어 (팀 리더)
+  │
+  ├─ Approve     → Merge 완료 ✅
+  ├─ Request Changes → 작업자 수정 후 재 push → 재리뷰
+  └─ Comment     → 작업자 선택적 반영
+```
