@@ -239,3 +239,129 @@ GitHub — PR 생성 (dev → main)
   ├─ Request Changes → 작업자 수정 후 재 push → 재리뷰
   └─ Comment     → 작업자 선택적 반영
 ```
+
+<br><br>
+
+# 4. 긴급 대처 — Rollback 실습
+
+> Git에서 실수했을 때 상황별로 되돌리는 방법 정리  
+> `rollback`은 Git 명령어가 아니라 **"개념"**이다.
+
+<br>
+
+## 4.1 git status (현재 상태 보기)
+```bash
+git status
+```
+
+- 수정된 파일 목록 확인
+- staging 여부 확인
+
+```bash
+echo "v2" >> file.txt
+git status
+# → modified: file.txt
+```
+
+<br>
+
+## 4.2 git log (이력 보기)
+```bash
+git log --oneline
+```
+
+커밋 히스토리를 한 줄씩 간결하게 확인
+
+```bash
+git commit -am "v2 commit"
+git log --oneline
+# → v2 commit
+# → v1 commit
+```
+
+<br>
+
+## 4.3 git checkout (과거 상태 보기)
+```bash
+# 과거로 이동 (읽기 전용 상태)
+git checkout HEAD~1
+
+# 원래로 돌아오기
+git checkout main
+```
+
+> ⚠️ **주의**: 이 상태에서 수정하면 위험 (Detached HEAD 상태)
+
+<br>
+
+## 4.4 git restore (파일 되돌리기)
+
+아직 commit 하지 않은 변경 취소
+
+```bash
+echo "v3" >> file.txt
+git status        # 변경 발생 확인
+
+git restore file.txt
+# → 변경 취소됨
+```
+
+<br>
+
+## 4.5 git reset (강력한 되돌리기)
+
+커밋 자체를 삭제
+
+```bash
+echo "v3" >> file.txt
+git commit -am "v3 commit"
+git log --oneline
+
+git reset --hard HEAD~1
+# → v3 commit 완전히 삭제됨
+```
+
+> ⚠️ **주의**: 히스토리 자체가 삭제되므로 협업 환경에서 사용 금지
+
+<br>
+
+## 4.6 git revert (안전한 되돌리기)
+
+기존 커밋은 유지하고 "되돌리는 새 커밋" 생성
+
+```bash
+echo "v3" >> file.txt
+git commit -am "v3 commit"
+
+git revert HEAD
+# → revert 커밋 새로 생성됨
+```
+
+<br>
+
+## 4.7 reset vs revert 비교
+
+| 항목 | reset | revert |
+|------|-------|--------|
+| 히스토리 | 삭제 | 유지 |
+| 안전성 | 위험 | 안전 |
+| 협업 | X | O |
+
+<br>
+
+## 4.8 상황별 rollback 방법
+
+| 상황 | 명령어 |
+|------|--------|
+| 수정 취소 (commit 전) | `git restore` |
+| 커밋 삭제 | `git reset` |
+| 커밋 유지하며 취소 | `git revert` |
+| 과거 버전 확인 | `git checkout` |
+
+<br>
+
+## 4.9 실무 핵심 규칙
+
+- **reset**은 혼자 작업할 때만 → 협업 브랜치에서 사용 시 팀원 히스토리 꼬임
+- **revert**는 협업용 → push된 커밋을 되돌릴 때 항상 revert 사용
+- **restore**는 습관처럼 → commit 전 실수한 코드 빠르게 되돌릴 때
